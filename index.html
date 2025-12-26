@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Vanilla - Enhanced Menus</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <aside id="sidebar">
+        <div class="sidebar-user">
+            <div class="user-avatar">N</div>
+            <span class="text-sm font-bold truncate">My Workspace</span>
+            <i data-lucide="chevrons-up-down" class="icon-xs" style="margin-left: auto; color: var(--text-muted);"></i>
+        </div>
+
+        <div class="sidebar-menu-section">
+            <div class="sidebar-btn" onclick="app.toggleSearch()">
+                <i data-lucide="search" class="icon-sm"></i> <span>Search</span>
+            </div>
+            <div class="sidebar-btn">
+                <i data-lucide="clock" class="icon-sm"></i> <span>Updates</span>
+            </div>
+            <div class="sidebar-btn">
+                <i data-lucide="settings" class="icon-sm"></i> <span>Settings & Members</span>
+            </div>
+        </div>
+
+        <div class="sidebar-tree">
+            <!-- FEATURE 1: Favorites Section with Enhanced Header Menu -->
+            <div id="favorites-section" class="hidden">
+                <div class="sidebar-section-header">
+                    <span class="sidebar-section-title">Favorites</span>
+                    <!-- REQ 1: Added ... and + icons on hover -->
+                    <div class="sidebar-header-actions">
+                        <div class="sidebar-header-action" onclick="app.openSectionMenu(event, 'favorites')"
+                            title="Section options">
+                            <i data-lucide="more-horizontal" class="icon-xs"></i>
+                        </div>
+                        <div class="sidebar-header-action" onclick="app.addPageToFavorites(event)"
+                            title="Add page to favorites">
+                            <i data-lucide="plus" class="icon-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                <div id="favorites-list" class="favorites-list"></div>
+            </div>
+
+            <!-- FEATURE 1: Private Section with Enhanced Header Menu -->
+            <div class="sidebar-section-header">
+                <span class="sidebar-section-title">Private</span>
+                <!-- REQ 1: Added ... and + icons on hover -->
+                <div class="sidebar-header-actions">
+                    <div class="sidebar-header-action" onclick="app.openSectionMenu(event, 'private')"
+                        title="Section options">
+                        <i data-lucide="more-horizontal" class="icon-xs"></i>
+                    </div>
+                    <div class="sidebar-header-action" onclick="app.addPage(null)" title="Add a page">
+                        <i data-lucide="plus" class="icon-xs"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-list" class="pages-list" style="padding-bottom: 40px;">
+            </div>
+        </div>
+
+        <div class="sidebar-trash">
+            <div class="sidebar-btn">
+                <i data-lucide="trash" class="icon-sm"></i>
+                <span>Trash (<span id="trash-count">0</span>)</span>
+            </div>
+        </div>
+    </aside>
+
+    <main>
+        <header>
+            <button class="header-btn" onclick="app.toggleSidebar()" id="sidebar-toggle-btn" title="Toggle Sidebar">
+                <i data-lucide="menu" class="icon-sm"></i>
+            </button>
+
+            <div class="breadcrumbs" id="breadcrumbs"></div>
+
+            <div class="header-right">
+                <div class="page-action-bar">
+                    <button class="header-btn" title="Share" onclick="app.sharePage()">
+                        <i data-lucide="share-2" class="icon-sm"></i>
+                    </button>
+                    <button class="header-btn" title="View Comments" onclick="app.toggleComments()">
+                        <i data-lucide="message-square" class="icon-sm"></i>
+                    </button>
+                    <button class="header-btn" onclick="app.toggleFavorite()" id="favorite-btn"
+                        title="Add to Favorites">
+                        <i data-lucide="star" class="icon-sm"></i>
+                    </button>
+                    <!-- FEATURE 2: Trigger for Top Right Menu -->
+                    <button class="header-btn" id="more-actions-btn" onclick="app.toggleMoreActionsMenu(event)"
+                        title="More Actions">
+                        <i data-lucide="more-horizontal" class="icon-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- REQ 2: Top Right Menu Implementation (Matches Screenshot 3) -->
+            <div id="more-actions-menu" class="popup-menu">
+                <div class="menu-search-box">
+                    <input type="text" class="menu-search-input" placeholder="Search actions...">
+                </div>
+
+                <!-- Font Selection -->
+                <div class="font-selection-row">
+                    <div class="font-card" onclick="app.toggleFont('default')" id="font-card-default">
+                        <div class="font-card-preview" style="font-family: 'Inter', sans-serif;">Ag</div>
+                        <div class="font-card-label">Default</div>
+                    </div>
+                    <div class="font-card" onclick="app.toggleFont('serif')" id="font-card-serif">
+                        <div class="font-card-preview" style="font-family: 'Lora', serif;">Ag</div>
+                        <div class="font-card-label">Serif</div>
+                    </div>
+                    <div class="font-card" onclick="app.toggleFont('mono')" id="font-card-mono">
+                        <div class="font-card-preview" style="font-family: 'Roboto Mono', monospace;">Ag</div>
+                        <div class="font-card-label">Mono</div>
+                    </div>
+                </div>
+
+                <div class="menu-item" onclick="app.copyLinkToClipboard()">
+                    <i data-lucide="link" class="icon-sm" style="margin-right: 8px;"></i> <span>Copy link</span>
+                    <span class="menu-item-right">Ctrl+Alt+L</span>
+                </div>
+                <div class="menu-item" onclick="app.duplicatePageMenuAction()">
+                    <i data-lucide="copy" class="icon-sm" style="margin-right: 8px;"></i> <span>Duplicate</span>
+                    <span class="menu-item-right">Ctrl+D</span>
+                </div>
+                <div class="menu-item" onclick="app.sidebarActionMoveTo()">
+                    <i data-lucide="arrow-right" class="icon-sm" style="margin-right: 8px;"></i> <span>Move to</span>
+                    <span class="menu-item-right">Ctrl+Shift+P</span>
+                </div>
+                <div class="menu-item" onclick="app.deleteCurrentPage()">
+                    <i data-lucide="trash-2" class="icon-sm" style="margin-right: 8px;"></i> <span>Move to Trash</span>
+                </div>
+
+                <div class="menu-separator"></div>
+
+                <div class="menu-item" onclick="app.toggleStyle('smallText')">
+                    <div class="toggle-switch-container">
+                        <span class="text-sm">Small text</span>
+                        <div class="toggle-track" id="toggle-small-text">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="menu-item" onclick="app.toggleStyle('fullWidth')">
+                    <div class="toggle-switch-container">
+                        <span class="text-sm">Full width</span>
+                        <div class="toggle-track" id="toggle-full-width">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Table of Contents Toggle (Blue when active) -->
+                <div class="menu-item" onclick="app.toggleStyle('toc')">
+                    <div class="toggle-switch-container">
+                        <span class="text-sm">Table of contents</span>
+                        <div class="toggle-track" id="toggle-toc">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="menu-item" onclick="app.showToast('Customize layout feature coming soon')">
+                    <i data-lucide="layout" class="icon-sm" style="margin-right: 8px;"></i> <span>Customize
+                        layout</span>
+                </div>
+
+                <div class="menu-separator"></div>
+
+                <div class="menu-item" onclick="app.lockPage()">
+                    <div class="toggle-switch-container">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <i data-lucide="lock" class="icon-sm"></i> <span>Lock page</span>
+                        </div>
+                        <div class="toggle-track" id="toggle-lock-page">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="menu-item" onclick="app.showToast('Suggestion mode coming soon')">
+                    <i data-lucide="message-square-plus" class="icon-sm" style="margin-right: 8px;"></i> <span>Suggest
+                        edits</span>
+                </div>
+                <div class="menu-item" onclick="app.showToast('Translate feature coming soon')">
+                    <i data-lucide="languages" class="icon-sm" style="margin-right: 8px;"></i> <span>Translate</span>
+                    <i data-lucide="chevron-right" class="icon-xs ml-auto"></i>
+                </div>
+
+                <div class="menu-separator"></div>
+
+                <div class="menu-item" onclick="app.showToast('Undo performed')">
+                    <i data-lucide="rotate-ccw" class="icon-sm" style="margin-right: 8px;"></i> <span>Undo</span>
+                    <span class="menu-item-right">Ctrl+Z</span>
+                </div>
+
+                <div class="menu-footer">
+                    Last edited by You just now
+                </div>
+            </div>
+
+        </header>
+
+        <div id="editor-container">
+            <div class="page-header-group">
+                <div class="add-icon-btn">
+                    <button class="header-btn" onclick="app.addIcon()" id="btn-add-icon">
+                        <i data-lucide="smile" class="icon-xs"></i> Add icon
+                    </button>
+                </div>
+                <div class="main-icon-wrapper hidden" id="page-icon-wrapper" onclick="app.randomizeIcon()">
+                    <span id="page-icon"></span>
+                    <div class="refresh-icon" title="Randomize">
+                        <i data-lucide="refresh-cw" class="icon-xs" style="color: white;"></i>
+                    </div>
+                </div>
+                <h1 contenteditable="true" id="page-title" placeholder="Untitled"></h1>
+            </div>
+
+            <div class="page-meta">
+                <div class="meta-item">
+                    <i data-lucide="user" class="icon-sm"></i>
+                    <span>Add comment</span>
+                </div>
+            </div>
+
+            <div id="blocks-area"></div>
+
+            <div class="bottom-spacer" onclick="app.focusLastBlock()"></div>
+        </div>
+    </main>
+
+    <!-- SIDE PEEK ELEMENT -->
+    <aside id="side-peek">
+        <div class="side-peek-header">
+            <div class="header-btn" onclick="app.closeSidePeek()"><i data-lucide="chevrons-right" class="icon-sm"></i>
+            </div>
+            <div class="side-peek-title">Page Preview</div>
+            <div class="header-btn" onclick="app.openSidePeekFull()"><i data-lucide="maximize-2" class="icon-sm"></i>
+            </div>
+        </div>
+        <div class="side-peek-content" id="side-peek-body">
+            <!-- Preview content loads here -->
+        </div>
+    </aside>
+
+    <!-- MOVE TO POPUP -->
+    <div id="move-to-popup">
+        <div class="move-search-box">
+            <input type="text" class="move-search-input" id="move-search-input" placeholder="Move page to...">
+        </div>
+        <div class="move-section-title">Suggested</div>
+        <div id="move-results-list" class="move-results-list"></div>
+        <div class="move-footer">
+            <div class="move-footer-avatar">N</div>
+            <span style="flex:1;">My Workspace</span>
+        </div>
+    </div>
+
+    <!-- REQ 1: NAVIGATION CONTEXT MENU (Matches Screenshot 1) -->
+    <div id="section-menu" class="popup-menu">
+        <div class="menu-item" onclick="app.setSectionSort('title')">
+            <i data-lucide="arrow-up-down" class="icon-sm"></i> <span>Sort</span>
+            <!-- Added Manual > visual -->
+            <span class="menu-item-right" id="section-sort-label">Manual <i data-lucide="chevron-right"
+                    class="icon-xs"></i></span>
+        </div>
+        <div class="menu-item" onclick="app.showToast('Show limit functionality placeholder')">
+            <i data-lucide="hash" class="icon-sm"></i> <span>Show</span>
+            <span class="menu-item-right">10 <i data-lucide="chevron-right" class="icon-xs"></i></span>
+        </div>
+
+        <div class="menu-separator"></div>
+
+        <div class="menu-item" onclick="app.showToast('Section reordering not supported in demo')">
+            <i data-lucide="arrow-up" class="icon-sm"></i> <span>Move up</span>
+        </div>
+        <div class="menu-item" onclick="app.showToast('Section reordering not supported in demo')">
+            <i data-lucide="arrow-down" class="icon-sm"></i> <span>Move down</span>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast-notification" class="toast-notification">Copied link to clipboard</div>
+
+    <div id="floating-toolbar">
+        <div class="toolbar-btn" onmousedown="app.formatText('bold')" title="Bold"><i data-lucide="bold"
+                class="icon-sm"></i></div>
+        <div class="toolbar-btn" onmousedown="app.formatText('italic')" title="Italic"><i data-lucide="italic"
+                class="icon-sm"></i></div>
+        <div class="toolbar-btn" onmousedown="app.formatText('underline')" title="Underline"><i data-lucide="underline"
+                class="icon-sm"></i></div>
+        <div class="toolbar-btn" onmousedown="app.formatText('strikeThrough')" title="Strikethrough"><i
+                data-lucide="strikethrough" class="icon-sm"></i></div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-btn" onmousedown="app.formatLink()" title="Link"><i data-lucide="link" class="icon-sm"></i>
+        </div>
+    </div>
+
+    <div id="sidebar-menu" class="popup-menu" style="width: 260px;">
+        <div class="menu-item" onclick="app.sidebarActionFavorite()" id="ctx-fav-btn">
+            <i data-lucide="star" class="icon-sm" style="margin-right: 8px;"></i> <span id="ctx-fav-text">Add to
+                Favorites</span>
+        </div>
+        <div class="menu-separator"></div>
+        <div class="menu-item" onclick="app.sidebarActionCopyLink()">
+            <i data-lucide="link" class="icon-sm" style="margin-right: 8px;"></i> <span>Copy link</span>
+        </div>
+        <div class="menu-item" onclick="app.sidebarActionDuplicate()">
+            <i data-lucide="copy" class="icon-sm" style="margin-right: 8px;"></i> <span>Duplicate</span>
+            <span class="menu-item-right">Ctrl+D</span>
+        </div>
+        <div class="menu-item" onclick="app.sidebarActionRename()">
+            <i data-lucide="edit-3" class="icon-sm" style="margin-right: 8px;"></i> <span>Rename</span>
+            <span class="menu-item-right">Ctrl+Shift+R</span>
+        </div>
+        <div class="menu-item" onclick="app.sidebarActionMoveTo()">
+            <i data-lucide="arrow-right" class="icon-sm" style="margin-right: 8px;"></i> <span>Move to</span>
+            <span class="menu-item-right">Ctrl+Shift+P</span>
+        </div>
+        <div class="menu-item danger" onclick="app.sidebarActionDelete()">
+            <i data-lucide="trash-2" class="icon-sm" style="margin-right: 8px;"></i> <span>Move to Trash</span>
+        </div>
+        <div class="menu-separator"></div>
+        <div class="menu-item" onclick="app.sidebarActionOpenNewTab()">
+            <i data-lucide="arrow-up-right" class="icon-sm" style="margin-right: 8px;"></i> <span>Open in new tab</span>
+            <span class="menu-item-right">Ctrl+Shift+Enter</span>
+        </div>
+        <div class="menu-item" onclick="app.sidebarActionOpenSidePeek()">
+            <i data-lucide="panel-right" class="icon-sm" style="margin-right: 8px;"></i> <span>Open in side peek</span>
+            <span class="menu-item-right">Alt+Click</span>
+        </div>
+        <div class="menu-footer">
+            Last edited by You just now
+        </div>
+    </div>
+
+    <!-- SLASH MENU & BLOCK MENU -->
+    <!-- SLASH MENU & BLOCK MENU -->
+    <div id="slash-command-menu" class="popup-menu" style="width: 300px; max-height: 320px; overflow-y: auto;">
+        <div class="menu-header-label">BASIC BLOCKS</div>
+        <div class="menu-item active" data-type="text"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'text')">
+            <div class="menu-icon-box">T</div>
+            <div class="menu-item-text"><span>Text</span><span class="menu-item-desc">Just start writing with plain
+                    text.</span></div>
+        </div>
+        <div class="menu-item" data-type="page"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'page')">
+            <div class="menu-icon-box"><i data-lucide="file-text" class="icon-sm"></i></div>
+            <div class="menu-item-text"><span>Page</span><span class="menu-item-desc">Embed a sub-page.</span></div>
+        </div>
+        <div class="menu-item" data-type="todo"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'todo')">
+            <div class="menu-icon-box">☐</div>
+            <div class="menu-item-text"><span>To-do list</span><span class="menu-item-desc">Track tasks.</span></div>
+        </div>
+        <div class="menu-item" data-type="h1"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'h1')">
+            <div class="menu-icon-box font-bold">H1</div>
+            <div class="menu-item-text"><span>Heading 1</span><span class="menu-item-desc">Big heading.</span></div>
+        </div>
+        <div class="menu-item" data-type="h2"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'h2')">
+            <div class="menu-icon-box font-bold">H2</div>
+            <div class="menu-item-text"><span>Heading 2</span><span class="menu-item-desc">Medium heading.</span></div>
+        </div>
+        <div class="menu-item" data-type="h3"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'h3')">
+            <div class="menu-icon-box font-bold">H3</div>
+            <div class="menu-item-text"><span>Heading 3</span><span class="menu-item-desc">Small heading.</span></div>
+        </div>
+        <div class="menu-item" data-type="bullet"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'bullet')">
+            <div class="menu-icon-box">●</div>
+            <div class="menu-item-text"><span>Bulleted list</span><span class="menu-item-desc">Simple bulleted
+                    list.</span></div>
+        </div>
+        <div class="menu-item" data-type="toggle"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'toggle')">
+            <div class="menu-icon-box"><i data-lucide="chevron-right" class="icon-sm"></i></div>
+            <div class="menu-item-text"><span>Toggle list</span><span class="menu-item-desc">Toggles can hide/show
+                    content.</span></div>
+        </div>
+        <div class="menu-header-label" style="margin-top: 8px;">MEDIA</div>
+        <div class="menu-item" data-type="image"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'image')">
+            <div class="menu-icon-box"><i data-lucide="image" class="icon-sm"></i></div>
+            <div class="menu-item-text"><span>Image</span><span class="menu-item-desc">Upload or embed.</span></div>
+        </div>
+        <div class="menu-item" data-type="bookmark"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'bookmark')">
+            <div class="menu-icon-box"><i data-lucide="globe" class="icon-sm"></i></div>
+            <div class="menu-item-text"><span>Web Bookmark</span><span class="menu-item-desc">Save a link.</span></div>
+        </div>
+        <div class="menu-item" data-type="code"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'code')">
+            <div class="menu-icon-box"><i data-lucide="code" class="icon-sm"></i></div>
+            <div class="menu-item-text"><span>Code</span><span class="menu-item-desc">Capture code snippet.</span></div>
+        </div>
+        <div class="menu-header-label" style="margin-top: 8px;">OTHER</div>
+        <div class="menu-item" data-type="quote"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'quote')">
+            <div class="menu-icon-box">❞</div>
+            <div class="menu-item-text"><span>Quote</span><span class="menu-item-desc">Capture a quote.</span></div>
+        </div>
+        <div class="menu-item" data-type="callout"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'callout')">
+            <div class="menu-icon-box">💡</div>
+            <div class="menu-item-text"><span>Callout</span><span class="menu-item-desc">Make writing stand out.</span>
+            </div>
+        </div>
+        <div class="menu-item" data-type="divider"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'divider')">
+            <div class="menu-icon-box">―</div>
+            <div class="menu-item-text"><span>Divider</span><span class="menu-item-desc">Visually divide blocks.</span>
+            </div>
+        </div>
+        <div class="menu-item" data-type="table"
+            onmousedown="event.preventDefault(); app.turnBlockInto(app.activeBlockIdForMenu, 'table')">
+            <div class="menu-icon-box">▦</div>
+            <div class="menu-item-text"><span>Table</span><span class="menu-item-desc">Simple table.</span></div>
+        </div>
+    </div>
+
+    <div id="block-menu" class="popup-menu" style="width: 260px;">
+        <!-- Search -->
+        <div style="padding: 6px;">
+            <input type="text" placeholder="Search actions..." class="menu-search-box">
+        </div>
+
+        <!-- Section 1 -->
+        <div class="menu-section-label">Text</div>
+
+        <div class="menu-item" onclick="app.toggleSubmenu('turn-into')">
+            <i data-lucide="refresh-cw" class="icon-sm" style="margin-right: 8px;"></i>
+            <span style="flex:1">Turn into</span>
+            <i data-lucide="chevron-right" class="icon-sm" style="opacity: 0.5;"></i>
+        </div>
+
+        <div class="menu-item" onclick="app.toggleSubmenu('color')">
+            <i data-lucide="palette" class="icon-sm" style="margin-right: 8px;"></i>
+            <span style="flex:1">Color</span>
+            <i data-lucide="chevron-right" class="icon-sm" style="opacity: 0.5;"></i>
+        </div>
+
+        <div class="menu-separator"></div>
+
+        <div class="menu-item" onclick="app.copyLinkToBlock()">
+            <i data-lucide="link" class="icon-sm" style="margin-right: 8px;"></i>
+            <span style="flex:1">Copy link to block</span>
+            <span class="menu-shortcut">Alt+Shift+L</span>
+        </div>
+
+        <div class="menu-item" onclick="app.duplicateBlockMenuAction()">
+            <i data-lucide="copy" class="icon-sm" style="margin-right: 8px;"></i>
+            <span style="flex:1">Duplicate</span>
+            <span class="menu-shortcut">Ctrl+D</span>
+        </div>
+
+        <div class="menu-item" onclick="app.moveBlockToPage()">
+            <i data-lucide="corner-up-right" class="icon-sm" style="margin-right: 8px;"></i>
+            <span style="flex:1">Move to</span>
+            <span class="menu-shortcut">Ctrl+Shift+P</span>
+        </div>
+
+        <div class="menu-item danger" onclick="app.deleteBlockMenuAction()">
+            <i data-lucide="trash-2" class="icon-sm" style="margin-right: 8px;"></i>
+            <span style="flex:1">Delete</span>
+            <span class="menu-shortcut">Del</span>
+        </div>
+
+        <div class="menu-separator"></div>
+
+        <div class="menu-item">
+            <i data-lucide="message-square" class="icon-sm" style="margin-right: 8px;"></i>
+            <span style="flex:1">Suggest edits</span>
+            <span class="menu-shortcut">Ctrl+Shift+Alt+X</span>
+        </div>
+
+        <div class="menu-item">
+            <i data-lucide="sparkles" class="icon-sm" style="margin-right: 8px;"></i>
+            <span style="flex:1">Ask AI</span>
+            <span class="menu-shortcut">Ctrl+J</span>
+        </div>
+
+        <div class="menu-separator"></div>
+
+        <div class="menu-footer">
+            Last edited by samiul islam<br>Today at 8:58 PM
+        </div>
+    </div>
+
+    <div id="search-overlay">
+        <div class="search-modal">
+            <div class="search-header">
+                <i data-lucide="search" style="color: var(--text-muted);" id="search-icon-display"></i>
+                <input type="text" class="search-input" id="search-input" placeholder="Search pages or blocks...">
+            </div>
+            <div class="search-filter-row">
+                <div class="filter-badge"><i data-lucide="arrow-up-down" class="icon-xs"></i> Sort</div>
+                <div class="filter-badge"><i data-lucide="type" class="icon-xs"></i> Title only</div>
+                <div class="filter-badge"><i data-lucide="user" class="icon-xs"></i> Created by</div>
+            </div>
+            <div class="search-results" id="search-results-list"></div>
+            <div class="search-footer">
+                <span><kbd style="background:var(--bg-hover); padding:1px 4px; border-radius:3px;">↑</kbd> <kbd
+                        style="background:var(--bg-hover); padding:1px 4px; border-radius:3px;">↓</kbd> to
+                    navigate</span>
+                <span><kbd style="background:var(--bg-hover); padding:1px 4px; border-radius:3px;">Enter</kbd> to
+                    open</span>
+                <span><kbd style="background:var(--bg-hover); padding:1px 4px; border-radius:3px;">Esc</kbd> to
+                    close</span>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="file-input" class="hidden-file-input" accept="image/*"
+        onchange="app.handleImageUpload(event)">
+
+    <script src="script.js"></script>
+</body>
+
+</html>
